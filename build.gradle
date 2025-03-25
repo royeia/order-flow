@@ -1,0 +1,73 @@
+plugins {
+    id 'java'
+    id 'nu.studer.jooq' version '8.2.1'
+}
+
+group = 'xyz.inteligenciaativa'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21) // Configura Java 21
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // JOOQ para geração de código
+    implementation 'org.jooq:jooq:3.18.6'
+    jooqGenerator 'org.jooq:jooq:3.18.6'
+    jooqGenerator 'org.jooq:jooq-meta:3.18.6'
+    jooqGenerator 'org.jooq:jooq-codegen:3.18.6'
+
+    // Driver SQL Server
+    jooqGenerator 'com.microsoft.sqlserver:mssql-jdbc:12.2.0.jre11' // Adicionado explicitamente aqui
+    // Biblioteca MSAL4J para autenticação de ActiveDirectoryPassword
+    jooqGenerator 'com.microsoft.azure:msal4j:1.12.0'
+    jooqGenerator 'org.slf4j:slf4j-simple:2.0.9'
+}
+
+jooq {
+    version = '3.18.6'
+
+    configurations {
+        main {
+            generationTool {
+                logging = org.jooq.meta.jaxb.Logging.WARN
+
+                jdbc {
+                    // Configura os parâmetros de conexão para o SQL Server
+                    driver = 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
+                    url = 'jdbc:sqlserver://order-flow-sql.database.windows.net:1433;database=order-flow-sql'
+                    user = 'orderflow@order-flow-sql'
+                    password = 'xxxx'
+                }
+
+                generator {
+                    name = 'org.jooq.codegen.DefaultGenerator'
+
+                    database {
+                        name = 'org.jooq.meta.sqlserver.SQLServerDatabase'
+                        inputSchema = 'dbo'
+                    }
+
+                    target {
+                        packageName = 'xyz.inteligenciaativa.orderflow.repository.tables'
+                        directory = 'build/generated-jooq'
+                    }
+
+                    strategy {
+                        name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+                    }
+                }
+            }
+        }
+    }
+}
+
+tasks.named('build') {
+    dependsOn 'generateJooq'
+}
