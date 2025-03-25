@@ -1,3 +1,4 @@
+//TODO refazer para postgres, pois o jooq não suporta SQLServer na versão free
 plugins {
     id 'java'
     id 'nu.studer.jooq' version '8.2.1'
