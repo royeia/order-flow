@@ -1,5 +1,3 @@
-//TODO refazer para postgres
-// jooq não suporta SQLServer na versão free
 plugins {
     id 'java'
     id 'nu.studer.jooq' version '8.2.1'
@@ -10,26 +8,33 @@ version = '0.0.1-SNAPSHOT'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(21) // Configura Java 21
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 repositories {
+    gradlePluginPortal()
     mavenCentral()
 }
 
 dependencies {
-    // JOOQ para geração de código
+    // JOOQ e H2
     implementation 'org.jooq:jooq:3.18.6'
     jooqGenerator 'org.jooq:jooq:3.18.6'
     jooqGenerator 'org.jooq:jooq-meta:3.18.6'
     jooqGenerator 'org.jooq:jooq-codegen:3.18.6'
+    jooqGenerator 'com.h2database:h2:2.2.224'
 
-    // Driver SQL Server
-    jooqGenerator 'com.microsoft.sqlserver:mssql-jdbc:12.2.0.jre11' // Adicionado explicitamente aqui
-    // Biblioteca MSAL4J para autenticação de ActiveDirectoryPassword
-    jooqGenerator 'com.microsoft.azure:msal4j:1.12.0'
-    jooqGenerator 'org.slf4j:slf4j-simple:2.0.9'
+    // Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter:3.2.6'
+    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.6'
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // Testes
+    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.6'
 }
 
 jooq {
@@ -37,32 +42,32 @@ jooq {
 
     configurations {
         main {
+            generateSchemaSourceOnCompilation = true
             generationTool {
-                logging = org.jooq.meta.jaxb.Logging.WARN
+                logging = 'WARN'
 
                 jdbc {
-                    // Configura os parâmetros de conexão para o SQL Server
-                    driver = 'com.microsoft.sqlserver.jdbc.SQLServerDriver'
-                    url = 'jdbc:sqlserver://order-flow-sql.database.windows.net:1433;database=order-flow-sql'
-                    user = 'orderflow@order-flow-sql'
-                    password = 'xxxx'
+                    driver = 'org.h2.Driver'
+                    url = 'jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1'
+                    user = 'sa'
+                    password = ''
                 }
 
                 generator {
                     name = 'org.jooq.codegen.DefaultGenerator'
 
+                    strategy {
+                        name = 'org.jooq.codegen.DefaultGeneratorStrategy'
+                    }
+
                     database {
-                        name = 'org.jooq.meta.sqlserver.SQLServerDatabase'
-                        inputSchema = 'dbo'
+                        name = 'org.jooq.meta.h2.H2Database'
+                        inputSchema = 'PUBLIC' // H2 utiliza o schema PUBLIC por padrão
                     }
 
                     target {
                         packageName = 'xyz.inteligenciaativa.orderflow.repository.tables'
                         directory = 'build/generated-jooq'
-                    }
-
-                    strategy {
-                        name = 'org.jooq.codegen.DefaultGeneratorStrategy'
                     }
                 }
             }

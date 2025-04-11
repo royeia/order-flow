@@ -11,6 +11,6 @@ public class HelloController {
     @GetMapping("/hello")
     public String sayHello() {
         log.info("Start world with...");
-        return "hello";
+        return "This world, Mr. Raimundo, is a ball, Mr. Carola. Isn’t it, Mr. Mané?";
     }
 }
